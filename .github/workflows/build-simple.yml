@@ -447,6 +447,9 @@ jobs:
 
           echo "::notice::R2 sync complete"
 
+      - name: Phase 5.5 — chown workspace to builder
+        run: chown -R builder:builder .
+
       - name: Phase 5.5 — verify R2 sync (download and check)
         shell: su builder -s /bin/bash {0}
         run: |
@@ -565,5 +568,3 @@ jobs:
         run: |
           rm -rf CoraOS_Repo.staging r2_verify
           echo "::notice::Cleaned up staging directory after failure"
-
-# Temp ting to be able to push
