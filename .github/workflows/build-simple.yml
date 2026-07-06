@@ -448,7 +448,7 @@ jobs:
           echo "::notice::R2 sync complete"
 
       - name: Phase 5.5 — verify R2 sync (download and check)
-        shell: bash
+        shell: su builder -s /bin/bash {0}
         run: |
           set -euo pipefail
 
