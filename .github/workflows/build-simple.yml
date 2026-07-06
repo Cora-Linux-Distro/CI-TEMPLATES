@@ -450,6 +450,21 @@ jobs:
       - name: Phase 5.5 — chown workspace to builder
         run: chown -R builder:builder .
 
+      - name: Phase 5.5 — configure rclone as builder
+        env:
+          REPO_KEY: ${{ secrets.REPO_ACCESS_KEY }}
+          REPO_SECRET: ${{ secrets.REPO_SECRET_ACCESS_KEY }}
+          ACCOUNT: ${{ secrets.ACCOUNT_ID }}
+        shell: su builder -s /bin/bash {0}
+        run: |
+          mkdir -p ~/.config/rclone
+          rclone config create coraosrepo s3 \
+            provider=Cloudflare \
+            access_key_id="$REPO_KEY" \
+            secret_access_key="$REPO_SECRET" \
+            endpoint="https://$ACCOUNT.r2.cloudflarestorage.com" \
+            no_check_bucket=true
+
       - name: Phase 5.5 — verify R2 sync (download and check)
         shell: su builder -s /bin/bash {0}
         run: |
