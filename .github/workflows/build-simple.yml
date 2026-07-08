@@ -427,7 +427,6 @@ jobs:
           rm -rf CoraOS_Repo.bak
 
           echo "::group::Live repo after swap"
-          ls -la CoraOS_Repo/ | head -30
           echo "::endgroup::"
           echo "::notice::Atomic swap complete — local repo updated"
 
