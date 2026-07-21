@@ -1,0 +1,74 @@
+name: Build and Release Rust Binary
+
+on:
+  workflow_call:
+    inputs:
+      binary_name:
+        description: "Name of the Rust binary to build (must match Cargo.toml)"
+        required: true
+        type: string
+      working_directory:
+        description: "Directory containing the Cargo.toml for this crate"
+        required: false
+        default: "."
+        type: string
+      release_name:
+        description: "Human-readable name for the GitHub Release"
+        required: false
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  build-and-release:
+    name: Build & Release ${{ inputs.binary_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: ${{ inputs.working_directory }}
+          cache-on-failure: true
+
+      - name: Build Optimized Release Binary
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          echo "🔨 Building ${{ inputs.binary_name }} in release mode..."
+          cargo build --release --bin ${{ inputs.binary_name }}
+
+          strip target/release/${{ inputs.binary_name }}
+
+          echo "✅ Build complete. Binary size:"
+          ls -lh target/release/${{ inputs.binary_name }}
+
+      - name: Generate Release Tag
+        id: tag
+        run: |
+          echo "tag_name=${{ inputs.binary_name }}-v1.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: "${{ inputs.release_name || inputs.binary_name }} Release ${{ steps.tag.outputs.tag_name }}"
+          body: |
+            - **Binary**: `${{ inputs.binary_name }}`
+            - **Commit**: ${{ github.sha }}
+            - **Working Dir**: `${{ inputs.working_directory }}`
+
+            *This is a pre-compiled, stripped x86_64 Linux binary ready for CoraOS packaging.*
+          files: |
+            ${{ inputs.working_directory }}/target/release/${{ inputs.binary_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
