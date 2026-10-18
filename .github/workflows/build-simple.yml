@@ -78,6 +78,7 @@ jobs:
 
       - name: Phase 0 — install deps
         run: |
+          pacman -Syy --noconfirm
           pacman -Syu --noconfirm
           pacman -S --needed --noconfirm \
             base-devel git sudo pacman-contrib gnupg archlinux-keyring \
